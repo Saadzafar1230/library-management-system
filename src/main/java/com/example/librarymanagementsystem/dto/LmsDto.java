@@ -21,6 +21,6 @@ public class LmsDto
 	private Long id;
 	@NotBlank(message = "Book Name is required")
 	private String bookName;
-	@NotNull(message = "ISBN Number is required")
+	@NotBlank(message = "ISBN Number is required")
 	private String isbn;
 }

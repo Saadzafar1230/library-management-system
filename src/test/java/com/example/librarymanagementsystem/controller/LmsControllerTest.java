@@ -5,15 +5,20 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Objects;
 
+import org.hamcrest.core.Is;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -21,6 +26,7 @@ import org.springframework.validation.BindingResult;
 
 import com.example.librarymanagementsystem.dto.LmsDto;
 import com.example.librarymanagementsystem.service.LmsService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 public class LmsControllerTest {
@@ -38,6 +44,7 @@ public class LmsControllerTest {
 		lmsController = new LmsController(lmsService);
 		mockMvc = MockMvcBuilders.standaloneSetup(lmsController).build();
 	}
+	private final ObjectMapper mapper = new ObjectMapper();
 
 	@Test
 	void testCreateNewBook() throws NoSuchMethodException
@@ -57,6 +64,22 @@ public class LmsControllerTest {
 		assertEquals(lmsDto.getClass().getDeclaredMethod("getIsbn"), Objects.requireNonNull(lms.getBody()).getClass().getDeclaredMethod("getIsbn"));
 		then(lmsService).should().createNewBook(any(LmsDto.class));
 		then(lmsService).shouldHaveNoMoreInteractions();
+	}
+	
+	@Test
+	void testCreateNewBook400() throws Exception
+	{
+		//given
+		LmsDto lmsDto = new LmsDto();
+		lmsDto.setId(1L);
+		lmsDto.setBookName("Data structures");
+		lmsDto.setIsbn("");
+		
+		//when
+		mockMvc.perform(post("/api/new/book").contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(lmsDto)))
+		.andExpect(status().isBadRequest())
+		.andExpect(jsonPath("$.isbn", Is.is("ISBN Number is required")));
+		
 	}
 	
 	
